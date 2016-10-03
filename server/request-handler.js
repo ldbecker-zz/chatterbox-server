@@ -12,6 +12,13 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var messages = [];
+
+var getDate = function() {
+  var time = new Date();
+  return (('0' + time.getHours()).slice(-2) + ':' + ('0' + time.getMinutes()).slice(-2) + ':' + ('0' + time.getSeconds()).slice(-2));
+};
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -27,7 +34,8 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  
+  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
   var statusCode = 200;
@@ -52,19 +60,56 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
   var optionsArr = request.url.substr(2).split('&');
-  var options = {};
+  var options = {'order': '-createdAt'};
   optionsArr.forEach(function(elem) {
     var splitElem = elem.split('=');
     options[splitElem[0]] = splitElem[1];
   });
   if (request.method === 'OPTIONS') {
-    console.log('OPTIONS REQUEST. Options = ' + JSON.stringify(options));
+    //console.log('OPTIONS REQUEST. Options = ' + JSON.stringify(options));
     //response.write('start');
     //response.write(JSON.stringify(options));
   } else if (request.method === 'GET') {
-    console.log('GET REQUEST. Options = ' + JSON.stringify(options));
-    //response.write('start');
-    //response.write(JSON.stringify(options));
+    if (options.order === undefined) {
+      options.results = messages;
+    } else if (options.order = '-createdAt') {
+      options.results = messages.sort(function(a, b) {
+        var hoursA = Number(a.createdAt.split(':')[0]);
+        var hoursB = Number(b.createdAt.split(':')[0]);
+        if (hoursA > hoursB) {
+          return 1;
+        } else if (hoursA < hoursB) {
+          return -1;
+        } else {
+          var minsA = Number(a.createdAt.split(':')[1]);
+          var minsB = Number(b.createdAt.split(':')[1]);
+          if (minsA === minsB) {
+            return Number(b.createdAt.split(':')[2]) - Number(a.createdAt.split(':')[2]);
+          } else {
+            return minsB - minsA;
+          }
+        }
+      });
+    }
+    
+  } else if (request.method === 'POST') {
+    console.log('POST REQUEST. Options = ' + JSON.stringify(options));
+    var body = '';
+    request.on('data', function (data) {
+      body += data;
+    });
+
+    request.on('end', function() {
+      console.log('end recieved');
+      var post = JSON.parse(body);
+      post['createdAt'] = getDate();
+      post['objectId'] = getDate();
+      messages.unshift(post);
+      options = {'createdAt': post.createdAt, 'objectId': post.objectId};
+      console.log(JSON.stringify(options));
+      response.end(JSON.stringify(options));
+      return;
+    });
   }
 
   // Make sure to always call response.end() - Node may not send
