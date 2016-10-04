@@ -38,7 +38,7 @@ var requestHandler = function(request, response) {
   //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   var statusCode = 200;
-  response.statusCode = 200;
+
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -58,6 +58,13 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
+
+  if (request.method === 'POST') {
+    statusCode = 201;
+  } else if (request.method === 'GET' && (request.url !== '/classes/messages')) {
+    statusCode = 404;
+  }
+
   response.writeHead(statusCode, headers);
   var optionsArr = request.url.substr(2).split('&');
   var options = {'order': '-createdAt', 'statusCode': 200, 'ended': true};
@@ -70,7 +77,7 @@ var requestHandler = function(request, response) {
     //response.write('start');
     //response.write(JSON.stringify(options));
   } else if (request.method === 'GET') {
-    statusCode = 200;
+    
     if (options.order === undefined) {
       options.results = messages;
       
@@ -95,6 +102,8 @@ var requestHandler = function(request, response) {
     }
     
   } else if (request.method === 'POST') {
+    options['statusCode'] = 201;
+    response.statusCode = 201;
     console.log('POST REQUEST. Options = ' + JSON.stringify(options));
     var body = '';
     request.on('data', function (data) {
@@ -108,6 +117,7 @@ var requestHandler = function(request, response) {
       messages.unshift(post);
       options['results'] = messages;
       //options = {'createdAt': post.createdAt, 'objectId': post.objectId};
+      console.log(JSON.stringify(options));
       response.end(JSON.stringify(options));
     });
   }
