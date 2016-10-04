@@ -116,4 +116,16 @@ describe('Node Server Request Listener Function', function() {
       });
   });
 
+  it('Should Return Messages Sorted by Time Sent', function() {
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Woop woop!'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+    var messages = JSON.parse(res._data).results;
+    expect(messages[0].createdAt >= messages[1].createdAt);
+  });
+
 });
