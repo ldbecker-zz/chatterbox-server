@@ -37,8 +37,8 @@ var requestHandler = function(request, response) {
   
   //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  // The outgoing status.
   var statusCode = 200;
+
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -49,7 +49,7 @@ var requestHandler = function(request, response) {
   var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
-  //
+
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
   
@@ -60,7 +60,8 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
   var optionsArr = request.url.substr(2).split('&');
-  var options = {'order': '-createdAt'};
+  var options = {'order': '-createdAt', 'statusCode': 200, 'ended': true};
+  console.log(options);
   optionsArr.forEach(function(elem) {
     var splitElem = elem.split('=');
     options[splitElem[0]] = splitElem[1];
@@ -72,6 +73,7 @@ var requestHandler = function(request, response) {
   } else if (request.method === 'GET') {
     if (options.order === undefined) {
       options.results = messages;
+      
     } else if (options.order = '-createdAt') {
       options.results = messages.sort(function(a, b) {
         var hoursA = Number(a.createdAt.split(':')[0]);
@@ -105,7 +107,8 @@ var requestHandler = function(request, response) {
       post['createdAt'] = getDate();
       post['objectId'] = getDate();
       messages.unshift(post);
-      options = {'createdAt': post.createdAt, 'objectId': post.objectId};
+      options['results'] = messages;
+      //options = {'createdAt': post.createdAt, 'objectId': post.objectId};
       console.log(JSON.stringify(options));
       response.end(JSON.stringify(options));
       return;
@@ -120,7 +123,9 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   //console.log(response);
-  response.end(JSON.stringify(options));
+  if (request.method !== 'POST') {
+    response.end(JSON.stringify(options));
+  }
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
