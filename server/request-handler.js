@@ -38,7 +38,7 @@ var requestHandler = function(request, response) {
   //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   var statusCode = 200;
-
+  response.statusCode = 200;
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -61,7 +61,6 @@ var requestHandler = function(request, response) {
   response.writeHead(statusCode, headers);
   var optionsArr = request.url.substr(2).split('&');
   var options = {'order': '-createdAt', 'statusCode': 200, 'ended': true};
-  console.log(options);
   optionsArr.forEach(function(elem) {
     var splitElem = elem.split('=');
     options[splitElem[0]] = splitElem[1];
@@ -71,6 +70,7 @@ var requestHandler = function(request, response) {
     //response.write('start');
     //response.write(JSON.stringify(options));
   } else if (request.method === 'GET') {
+    statusCode = 200;
     if (options.order === undefined) {
       options.results = messages;
       
@@ -102,16 +102,13 @@ var requestHandler = function(request, response) {
     });
 
     request.on('end', function() {
-      console.log('end recieved');
       var post = JSON.parse(body);
       post['createdAt'] = getDate();
       post['objectId'] = getDate();
       messages.unshift(post);
       options['results'] = messages;
       //options = {'createdAt': post.createdAt, 'objectId': post.objectId};
-      console.log(JSON.stringify(options));
       response.end(JSON.stringify(options));
-      return;
     });
   }
 
@@ -138,7 +135,7 @@ var requestHandler = function(request, response) {
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 
-
 module.exports = requestHandler;
+//module.exports = requestHandler;
 //exports.defaultCorsHeaders = defaultCorsHeaders;
 
