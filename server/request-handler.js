@@ -23,9 +23,9 @@ var getDate = function() {
 };
 
 var requestHandler = function(request, response) {
-  if (request.url.endsWith('.js') || request.url.endsWith('.gif') || request.url.endsWith('.css')) {
+  var loadStaticFile = function(filePath) {
     var strFile = '';
-    fs.readFile('/Users/student/LucasVien/2016-09-chatterbox-server/client/client' + request.url, 'binary', function read(err, data) {
+    fs.readFile('/Users/student/LucasVien/2016-09-chatterbox-server/client/client' + filePath, 'binary', function read(err, data) {
       if (err) {
         throw err;
       }
@@ -33,19 +33,16 @@ var requestHandler = function(request, response) {
       response.end(strFile);
     });
     return;
+  };
+  if (request.url.endsWith('.js') || request.url.endsWith('.gif') || request.url.endsWith('.css')) {
+    loadStaticFile(request.url);
+    return;
   }
 
   if (request.url === '/' || request.url.includes('?username=')) {
     console.log('Page Accessed');
-    var strHTML = '';
-    fs.readFile('/Users/student/LucasVien/2016-09-chatterbox-server/client/client/index.html', 'binary', function read(err, data) {
-      if (err) {
-        throw err;
-      }
-      strHTML = data;
-      response.end(strHTML);
-      return;
-    });
+    loadStaticFile('/index.html');
+    return;
   } else {
     // Request and Response come from node's http module.
     //
@@ -111,20 +108,10 @@ var requestHandler = function(request, response) {
         
       } else if (options.order = '-createdAt') {
         options.results = messages.sort(function(a, b) {
-          var hoursA = Number(a.createdAt.split(':')[0]);
-          var hoursB = Number(b.createdAt.split(':')[0]);
-          if (hoursA > hoursB) {
-            return 1;
-          } else if (hoursA < hoursB) {
+          if (a.createdAt > b.createdAt) {
             return -1;
           } else {
-            var minsA = Number(a.createdAt.split(':')[1]);
-            var minsB = Number(b.createdAt.split(':')[1]);
-            if (minsA === minsB) {
-              return Number(b.createdAt.split(':')[2]) - Number(a.createdAt.split(':')[2]);
-            } else {
-              return minsB - minsA;
-            }
+            return 1;
           }
         });
       }

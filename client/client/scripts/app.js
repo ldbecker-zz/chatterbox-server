@@ -44,7 +44,6 @@ var app = {
       type: 'POST',
       data: JSON.stringify(message),
       success: function (data) {
-        console.log(data);
         // Clear messages input
         app.$message.val('');
 
