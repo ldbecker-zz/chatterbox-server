@@ -23,6 +23,22 @@ var getDate = function() {
 };
 
 var requestHandler = function(request, response) {
+
+  var saveMessages = function() {
+    fs.writeFile('./messages.txt', JSON.stringify(messages), function() {
+      console.log('Messages Written to messages.txt!');
+    });
+  };
+
+  var loadMessages = function() {
+    fs.readFile('./messages.txt', function(err, data) {
+      if (err) {
+        throw err;
+      }
+      messages = JSON.parse(data);
+    });
+  };
+
   var loadStaticFile = function(filePath) {
     var strFile = '';
     fs.readFile('/Users/student/LucasVien/2016-09-chatterbox-server/client/client' + filePath, 'binary', function read(err, data) {
@@ -34,6 +50,7 @@ var requestHandler = function(request, response) {
     });
     return;
   };
+
   if (request.url.endsWith('.js') || request.url.endsWith('.gif') || request.url.endsWith('.css')) {
     loadStaticFile(request.url);
     return;
@@ -44,22 +61,9 @@ var requestHandler = function(request, response) {
     loadStaticFile('/index.html');
     return;
   } else {
-    // Request and Response come from node's http module.
-    //
-    // They include information about both the incoming request, such as
-    // headers and URL, and about the outgoing response, such as its status
-    // and content.
-    //
-    // Documentation for both request and response can be found in the HTTP section at
-    // http://nodejs.org/documentation/api/
 
-    // Do some basic logging.
-    //
-    // Adding more logging to your server can be an easy way to get passive
-    // debugging help, but you should always be careful about leaving stray
-    // console.logs in your code.
-    
-    //console.log('Serving request type ' + request.method + ' for url ' + request.url);
+    loadMessages();
+    //load Messages from HD
 
     var statusCode = 200;
 
@@ -91,12 +95,9 @@ var requestHandler = function(request, response) {
     }
 
     response.writeHead(statusCode, headers);
-    var optionsArr = request.url.substr(2).split('&');
+    
     var options = {'order': '-createdAt', 'statusCode': 200, 'ended': true};
-    optionsArr.forEach(function(elem) {
-      var splitElem = elem.split('=');
-      options[splitElem[0]] = splitElem[1];
-    });
+    
     if (request.method === 'OPTIONS') {
       //console.log('OPTIONS REQUEST. Options = ' + JSON.stringify(options));
       //response.write('start');
@@ -129,6 +130,9 @@ var requestHandler = function(request, response) {
         post['createdAt'] = getDate();
         post['objectId'] = post['createdAt'];
         messages.unshift(post);
+
+        //save messages to HD
+        saveMessages();
         options['results'] = messages;
         //options = {'createdAt': post.createdAt, 'objectId': post.objectId};
         response.end(JSON.stringify(options));
