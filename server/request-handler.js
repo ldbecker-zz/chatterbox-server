@@ -61,7 +61,8 @@ var requestHandler = function(request, response) {
 
   if (request.method === 'POST') {
     statusCode = 201;
-  } else if (request.method === 'GET' && (request.url !== '/classes/messages')) {
+  } else if (request.method === 'GET' && (request.url.split('?')[0] !== '/classes/messages')) {
+    console.log('404. Url = ' + request.url);
     statusCode = 404;
   }
 
@@ -144,8 +145,10 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
+module.exports.requestHandler = requestHandler;
+//module.exports = requestHandler;
+//exports.requestHandler = requestHandler;
 
-module.exports = requestHandler;
 //module.exports = requestHandler;
 //exports.defaultCorsHeaders = defaultCorsHeaders;
 
