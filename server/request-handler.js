@@ -44,10 +44,13 @@ var requestHandler = function(request, response) {
     var strFile = '';
     fs.readFile('./client/client' + filePath, 'binary', function read(err, data) {
       if (err) {
-        throw err;
+        return;
       }
       strFile = data;
-      response.end(strFile);
+      if (filePath.endsWith('.gif')) {
+        response.writeHead(200, {'Content-Type': 'image/gif'});
+      }
+      response.end(strFile, 'binary');
     });
     return;
   };
@@ -79,6 +82,8 @@ var requestHandler = function(request, response) {
       statusCode = 201;
     } else if (request.method === 'GET' && (request.url.split('?')[0] !== '/classes/messages')) {
       statusCode = 404;
+      response.writeHead(statusCode, headers);
+      response.end();
     }
 
     response.writeHead(statusCode, headers);
