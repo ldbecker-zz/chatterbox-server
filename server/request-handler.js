@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var lineReader = require('readline');
 
 /*************************************************************
 
@@ -25,23 +26,23 @@ var getDate = function() {
 var requestHandler = function(request, response) {
 
   var saveMessages = function() {
-    fs.writeFile('./messages.txt', JSON.stringify(messages), function() {
-      console.log('Messages Written to messages.txt!');
-    });
+    fs.writeFile('./messages.txt', JSON.stringify(messages), function() {});
   };
 
   var loadMessages = function() {
     fs.readFile('./messages.txt', function(err, data) {
       if (err) {
-        throw err;
+        messages = [];
+        saveMessages();
+      } else {
+        messages = JSON.parse(data);
       }
-      messages = JSON.parse(data);
     });
   };
 
   var loadStaticFile = function(filePath) {
     var strFile = '';
-    fs.readFile('/Users/student/LucasVien/2016-09-chatterbox-server/client/client' + filePath, 'binary', function read(err, data) {
+    fs.readFile('./client/client' + filePath, 'binary', function read(err, data) {
       if (err) {
         throw err;
       }
@@ -57,13 +58,9 @@ var requestHandler = function(request, response) {
   }
 
   if (request.url === '/' || request.url.includes('?username=')) {
-    console.log('Page Accessed');
     loadStaticFile('/index.html');
     return;
   } else {
-
-    loadMessages();
-    //load Messages from HD
 
     var statusCode = 200;
 
@@ -73,24 +70,14 @@ var requestHandler = function(request, response) {
       'access-control-allow-headers': 'content-type, accept',
       'access-control-max-age': 10 // Seconds.
     };
-    // See the note below about CORS headers.
+    
     var headers = defaultCorsHeaders;
 
-    // Tell the client we are sending them plain text.
-
-    // You will need to change this if you are sending something
-    // other than plain text, like JSON or HTML.
-    
-    //headers['Content-Type'] = 'text/plain';
     headers['Content-Type'] = 'application/json';
-
-    // .writeHead() writes to the request line and headers of the response,
-    // which includes the status and all headers.
 
     if (request.method === 'POST') {
       statusCode = 201;
     } else if (request.method === 'GET' && (request.url.split('?')[0] !== '/classes/messages')) {
-      console.log('404. Url = ' + request.url);
       statusCode = 404;
     }
 
@@ -99,14 +86,10 @@ var requestHandler = function(request, response) {
     var options = {'order': '-createdAt', 'statusCode': 200, 'ended': true};
     
     if (request.method === 'OPTIONS') {
-      //console.log('OPTIONS REQUEST. Options = ' + JSON.stringify(options));
-      //response.write('start');
-      //response.write(JSON.stringify(options));
     } else if (request.method === 'GET') {
-      
+      loadMessages();
       if (options.order === undefined) {
         options.results = messages;
-        
       } else if (options.order = '-createdAt') {
         options.results = messages.sort(function(a, b) {
           if (a.createdAt > b.createdAt) {
@@ -130,23 +113,17 @@ var requestHandler = function(request, response) {
         post['createdAt'] = getDate();
         post['objectId'] = post['createdAt'];
         messages.unshift(post);
-
-        //save messages to HD
+        if (messages.length === 101) {
+          messages.pop();
+        }
+        
         saveMessages();
         options['results'] = messages;
-        //options = {'createdAt': post.createdAt, 'objectId': post.objectId};
+        
         response.end(JSON.stringify(options));
       });
     }
 
-    // Make sure to always call response.end() - Node may not send
-    // anything back to the client until you do. The string you pass to
-    // response.end() will be the body of the response - i.e. what shows
-    // up in the browser.
-    //
-    // Calling .end "flushes" the response's internal buffer, forcing
-    // node to actually send all the data over to the client.
-    //console.log(response);
     if (request.method !== 'POST') {
       response.end(JSON.stringify(options));
     }

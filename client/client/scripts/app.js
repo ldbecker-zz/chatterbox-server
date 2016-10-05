@@ -224,8 +224,9 @@ var app = {
       text: app.$message.val(),
       roomname: app.roomname || 'lobby'
     };
-
-    app.send(message);
+    if (app.$message.val() !== '') {
+      app.send(message);
+    }
 
     // Stop the form from submitting
     event.preventDefault();
